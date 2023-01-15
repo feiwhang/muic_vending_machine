@@ -22,7 +22,7 @@ class Product(ormar.Model):
 
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
-    price: int = ormar.Integer(min=1, nullable=False)
+    price: int = ormar.Integer(minimum=1, nullable=False)
 
 
 class VendingMachine(ormar.Model):
