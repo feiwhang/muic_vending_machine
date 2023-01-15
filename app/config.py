@@ -5,4 +5,4 @@ class Settings(BaseSettings):
     db_url: str = Field(..., env="DATABASE_URL")
 
 
-setting = Settings()
+settings = Settings()
