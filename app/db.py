@@ -15,8 +15,8 @@ class BaseMeta(ormar.ModelMeta):
 
 
 class Product(ormar.Model):
-    class Meta():
-        tablename = 'products'
+    class Meta:
+        tablename = "products"
         metadata = metadata
         database = database
 
@@ -26,15 +26,15 @@ class Product(ormar.Model):
 
 
 class VendingMachine(ormar.Model):
-    class Meta():
-        tablename = 'vending_machines'
+    class Meta:
+        tablename = "vending_machines"
         metadata = metadata
         database = database
 
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
     location: str = ormar.String(max_length=100, nullable=False)
-    products: Optional[Dict[Product, int]] = ormar.ManyToMany(Product)
+    stocks: Optional[Dict[Product, int]] = ormar.ManyToMany(Product)
 
 
 engine = sqlalchemy.create_engine(settings.db_url)
