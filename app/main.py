@@ -13,8 +13,6 @@ async def read_root():
 async def startup():
     if not database.is_connected:
         await database.connect()
-    # create a dummy entry
-    await VendingMachine.objects.get_or_create(name="Soda Zaaa", location="Old building 4th floor")
 
 
 @app.on_event("shutdown")
