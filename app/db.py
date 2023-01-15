@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, Dict
 from .config import settings
 
 import databases
@@ -22,6 +22,7 @@ class Product(ormar.Model):
 
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
+    price: int = ormar.Integer(min=1, nullable=False)
 
 
 class VendingMachine(ormar.Model):
@@ -33,7 +34,7 @@ class VendingMachine(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
     location: str = ormar.String(max_length=100, nullable=False)
-    products: Optional[List[Product]] = ormar.ManyToMany(Product)
+    products: Optional[Dict[Product, int]] = ormar.ManyToMany(Product)
 
 
 engine = sqlalchemy.create_engine(settings.db_url)
