@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.db import database, VendingMachine
+from app.db import database, VendingMachine, Product
 
 import ormar
 import asyncpg
@@ -7,9 +7,18 @@ import asyncpg
 app = FastAPI(title="MUIC Vending Machine")
 
 
+class Response:
+    def __init__(self, is_sucess: bool, message: str | None = None):
+        self.is_sucess = is_sucess
+        self.message = message or ""
+
+
 @app.get("/")
 async def read_root():
-    return await VendingMachine.objects.all()
+    return {
+        "Vending Machine": await VendingMachine.objects.all(),
+        "Product": await Product.objects.all(),
+    }
 
 
 @app.on_event("startup")
@@ -34,10 +43,10 @@ async def create_vending_machine(name: str, location: str):
     try:
         await new_machine.save()
     except asyncpg.exceptions.UniqueViolationError:
-        return {"error_message": "Vending machine name already exists"}
+        return Response(False, "Vending machine name already exists")
     except Exception as e:
-        return {"error_message": e.message}
-    return new_machine
+        return Response(False, e.message)
+    return Response(True)
 
 
 @app.put("/vending_machine/edit")
@@ -56,10 +65,10 @@ async def edit_vending_machine(
             machine.location = new_location or machine.location
             await machine.update()
     except ormar.NoMatch:
-        return {"error_message": "Vending machine does not exist"}
+        return Response(False, "Vending machine does not exist")
     except Exception as e:
-        return {"error_message": e.message}
-    return machine
+        return Response(False, e.message)
+    return Response(True)
 
 
 @app.delete("/vending_machine/delete")
@@ -74,5 +83,5 @@ async def delete_vending_machine(id: int):
     except ormar.NoMatch:
         return {"error_message": "Vending machine does not exist"}
     except Exception as e:
-        return {"error_message": e.message}
+        return Response(False, e.message)
     return machine
