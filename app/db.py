@@ -15,10 +15,8 @@ class BaseMeta(ormar.ModelMeta):
 
 
 class Product(ormar.Model):
-    class Meta:
+    class Meta(BaseMeta):
         tablename = "products"
-        metadata = metadata
-        database = database
 
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
@@ -26,15 +24,26 @@ class Product(ormar.Model):
 
 
 class VendingMachine(ormar.Model):
-    class Meta:
+    class Meta(BaseMeta):
         tablename = "vending_machines"
-        metadata = metadata
-        database = database
 
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
     location: str = ormar.String(max_length=100, nullable=False)
-    stocks: Optional[Dict[Product, int]] = ormar.ManyToMany(Product)
+    stocks = ormar.ManyToMany(
+        Product,
+        through_relation_name="vending_machine_id",
+        through_reverse_relation_name="product_id",
+    )
+
+
+class VendingMachineXProduct(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "vending_machines_x_products"
+
+    quantity: int = ormar.Integer(minimum=1, nullable=False)
+    vending_machine_id = ormar.ForeignKey(VendingMachine)
+    product_id = ormar.ForeignKey(Product)
 
 
 engine = sqlalchemy.create_engine(settings.db_url)

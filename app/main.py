@@ -1,16 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from app.db import database, VendingMachine, Product
 
 import ormar
 import asyncpg
 
 app = FastAPI(title="MUIC Vending Machine")
-
-
-class Response:
-    def __init__(self, is_sucess: bool, message: str | None = None):
-        self.is_sucess = is_sucess
-        self.message = message or ""
 
 
 @app.get("/")
@@ -39,14 +33,16 @@ async def create_vending_machine(name: str, location: str):
     Creates a new vending machine by taking a name and location as input, then saves it to the database.
     An error message is returned if the vending machine name already exists or if an exception occurs during save.
     """
-    new_machine = VendingMachine(name=name, location=location)
     try:
+        new_machine = VendingMachine(name=name, location=location)
         await new_machine.save()
     except asyncpg.exceptions.UniqueViolationError:
-        return Response(False, "Vending machine name already exists")
+        raise HTTPException(
+            status_code=500, detail="Vending machine name already exists"
+        )
     except Exception as e:
-        return Response(False, e.message)
-    return Response(True)
+        return HTTPException(status_code=500, detail=str(e.with_traceback))
+    return HTTPException(status_code=200, detail="Vending machine created")
 
 
 @app.put("/vending_machine/edit")
@@ -65,10 +61,10 @@ async def edit_vending_machine(
             machine.location = new_location or machine.location
             await machine.update()
     except ormar.NoMatch:
-        return Response(False, "Vending machine does not exist")
+        return HTTPException(status_code=500, detail="Vending machine does not exist")
     except Exception as e:
-        return Response(False, e.message)
-    return Response(True)
+        return HTTPException(status_code=500, detail=str(e.with_traceback))
+    return HTTPException(status_code=200, detail="Vending machine updated")
 
 
 @app.delete("/vending_machine/delete")
@@ -83,5 +79,53 @@ async def delete_vending_machine(id: int):
     except ormar.NoMatch:
         return {"error_message": "Vending machine does not exist"}
     except Exception as e:
-        return Response(False, e.message)
-    return machine
+        return HTTPException(status_code=500, detail=str(e.with_traceback))
+    return HTTPException(status_code=200, detail="Vending machine deleted")
+
+
+@app.post("/vending_machine/stocks/add")
+async def add_product_to_stocks(
+    vending_machine_id: int, product_id: int, quantity: int
+):
+    """
+    Adds a product to a vending machine's stock by taking a vending machine id, product id, and quantity as input,
+    then adds it to the database.
+    An error message is returned if the vending machine id or product id does not exist or if an exception occurs during add.
+    """
+    machine = None
+    try:
+        # retrieve the vending machine
+        machine = await VendingMachine.objects.get(id=vending_machine_id)
+    except ormar.NoMatch:
+        return HTTPException(status_code=500, detail="Vending machine does not exist")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e.with_traceback))
+
+    try:
+        # retrieve the product
+        product = await Product.objects.get(id=product_id)
+        # add the product to the vending machine's stocks with quantity
+        await machine.stocks.add_through(product=product, quantity=quantity)
+    except ormar.NoMatch:
+        return HTTPException(
+            status_code=500, detail="Product does not exist, please create"
+        )
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
+    return HTTPException(status_code=200, detail="Product added to stocks")
+
+
+@app.post("/product/create")
+async def create_product(name: str, price: int):
+    """
+    Creates a new product by taking a name and price as input, then saves it to the database.
+    An error message is returned if the product name already exists or if an exception occurs during save.
+    """
+    try:
+        new_product = Product(name=name, price=price)
+        await new_product.save()
+    except asyncpg.exceptions.UniqueViolationError:
+        return HTTPException(status_code=500, detail="Product name already exists")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
+    return HTTPException(status_code=200, detail="Product created")
