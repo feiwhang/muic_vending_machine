@@ -23,6 +23,14 @@ class Product(ormar.Model):
     price: int = ormar.Integer(minimum=1, nullable=False)
 
 
+class Stock(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "stocks"
+
+    id: int = ormar.Integer(primary_key=True)
+    quantity: int = ormar.Integer(minimum=0, nullable=False)
+
+
 class VendingMachine(ormar.Model):
     class Meta(BaseMeta):
         tablename = "vending_machines"
@@ -30,20 +38,7 @@ class VendingMachine(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     name: str = ormar.String(max_length=100, unique=True, nullable=False)
     location: str = ormar.String(max_length=100, nullable=False)
-    stocks = ormar.ManyToMany(
-        Product,
-        through_relation_name="vending_machine_id",
-        through_reverse_relation_name="product_id",
-    )
-
-
-class VendingMachineXProduct(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "vending_machines_x_products"
-
-    quantity: int = ormar.Integer(minimum=1, nullable=False)
-    vending_machine_id = ormar.ForeignKey(VendingMachine)
-    product_id = ormar.ForeignKey(Product)
+    stocks = ormar.ManyToMany(Product, through=Stock)
 
 
 engine = sqlalchemy.create_engine(settings.db_url)
