@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from app.db import database, VendingMachine, Product
+from app.db import database, VendingMachine, Product, Stock
 
 import ormar
 import asyncpg
@@ -12,6 +12,7 @@ async def read_root():
     return {
         "Vending Machine": await VendingMachine.objects.all(),
         "Product": await Product.objects.all(),
+        "Stocks": await Stock.objects.all(),
     }
 
 
@@ -105,7 +106,7 @@ async def add_product_to_stocks(
         # retrieve the product
         product = await Product.objects.get(id=product_id)
         # add the product to the vending machine's stocks with quantity
-        await machine.stocks.add_through(product=product, quantity=quantity)
+        await machine.stocks.add(product, quantity=quantity)
     except ormar.NoMatch:
         return HTTPException(
             status_code=500, detail="Product does not exist, please create"
@@ -113,6 +114,25 @@ async def add_product_to_stocks(
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
     return HTTPException(status_code=200, detail="Product added to stocks")
+
+
+@app.get("/vending_machine/stocks")
+async def get_stocks(vending_machine_id: int):
+    """
+    Gets all products in a vending machine by taking a vending machine id as input.
+    An error message is returned if the vending machine id does not exist or if an exception occurs during get.
+    """
+    try:
+        machine = await VendingMachine.objects.get(id=vending_machine_id)
+        stocks = await machine.stocks.all()
+        return [
+            {"name": product.name, "quantity": product.stock.quantity}
+            for product in stocks
+        ]
+    except ormar.NoMatch:
+        return HTTPException(status_code=500, detail="Vending machine does not exist")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/product/create")
