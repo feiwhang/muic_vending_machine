@@ -202,3 +202,13 @@ async def create_product(name: str, price: int):
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
     return HTTPException(status_code=200, detail="Product created")
+
+
+# get all products
+@app.get("/product")
+async def get_products():
+    """
+    Gets all products in the database.
+    """
+    products = await Product.objects.all()
+    return [{"name": product.name, "price": product.price} for product in products]
