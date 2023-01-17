@@ -105,8 +105,15 @@ async def add_product_to_stocks(
     try:
         # retrieve the product
         product = await Product.objects.get(id=product_id)
+        # check if product already exists in the vending machine's stocks
+        if await machine.stocks.filter(id=product_id).exists():
+            return HTTPException(
+                status_code=500,
+                detail="Product already exist in stocks, please edit or delete",
+            )
         # add the product to the vending machine's stocks with quantity
         await machine.stocks.add(product, quantity=quantity)
+
     except ormar.NoMatch:
         return HTTPException(
             status_code=500, detail="Product does not exist, please create"
@@ -143,6 +150,12 @@ async def edit_stocks(vending_machine_id: int, product_id: int, new_quantity: in
     """
     try:
         machine = await VendingMachine.objects.get(id=vending_machine_id)
+        # check if product exists in the vending machine's stocks
+        if not await machine.stocks.filter(id=product_id).exists():
+            return HTTPException(
+                status_code=500,
+                detail="Product does not exist in stocks, please add",
+            )
         await machine.stocks.filter(id=product_id).update(
             stock={"quantity": new_quantity}
         )
