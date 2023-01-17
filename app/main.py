@@ -166,6 +166,28 @@ async def edit_stocks(vending_machine_id: int, product_id: int, new_quantity: in
     return HTTPException(status_code=200, detail="Product quantity updated")
 
 
+@app.delete("/vending_machine/stocks/delete")
+async def delete_stocks(vending_machine_id: int, product_id: int):
+    """
+    Deletes a product from a vending machine's stock by taking a vending machine id and product id as input.
+    An error message is returned if the vending machine id or product id does not exist or if an exception occurs during delete.
+    """
+    try:
+        machine = await VendingMachine.objects.get(id=vending_machine_id)
+        # check if product exists in the vending machine's stocks
+        if not await machine.stocks.filter(id=product_id).exists():
+            return HTTPException(
+                status_code=500,
+                detail="Product does not exist in stocks",
+            )
+        await machine.stocks.filter(id=product_id).delete_through_instance(product_id)
+    except ormar.NoMatch:
+        return HTTPException(status_code=500, detail="Vending machine does not exist")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
+    return HTTPException(status_code=200, detail="Product deleted from stocks")
+
+
 @app.post("/product/create")
 async def create_product(name: str, price: int):
     """
