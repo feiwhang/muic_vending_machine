@@ -42,7 +42,7 @@ async def create_vending_machine(name: str, location: str):
             status_code=500, detail="Vending machine name already exists"
         )
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e.with_traceback))
+        return HTTPException(status_code=500, detail=str(e))
     return HTTPException(status_code=200, detail="Vending machine created")
 
 
@@ -64,7 +64,7 @@ async def edit_vending_machine(
     except ormar.NoMatch:
         return HTTPException(status_code=500, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e.with_traceback))
+        return HTTPException(status_code=500, detail=str(e))
     return HTTPException(status_code=200, detail="Vending machine updated")
 
 
@@ -80,7 +80,7 @@ async def delete_vending_machine(id: int):
     except ormar.NoMatch:
         return {"error_message": "Vending machine does not exist"}
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e.with_traceback))
+        return HTTPException(status_code=500, detail=str(e))
     return HTTPException(status_code=200, detail="Vending machine deleted")
 
 
@@ -100,7 +100,7 @@ async def add_product_to_stocks(
     except ormar.NoMatch:
         return HTTPException(status_code=500, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e.with_traceback))
+        return HTTPException(status_code=500, detail=str(e))
 
     try:
         # retrieve the product
@@ -133,6 +133,24 @@ async def get_stocks(vending_machine_id: int):
         return HTTPException(status_code=500, detail="Vending machine does not exist")
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/vending_machine/stocks/edit")
+async def edit_stocks(vending_machine_id: int, product_id: int, new_quantity: int):
+    """
+    Edits the quantity of a product in a vending machine's stock by taking a vending machine id, product id, and quantity as input.
+    An error message is returned if the vending machine id or product id does not exist or if an exception occurs during update.
+    """
+    try:
+        machine = await VendingMachine.objects.get(id=vending_machine_id)
+        await machine.stocks.filter(id=product_id).update(
+            stock={"quantity": new_quantity}
+        )
+    except ormar.NoMatch:
+        return HTTPException(status_code=500, detail="Vending machine does not exist")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
+    return HTTPException(status_code=200, detail="Product quantity updated")
 
 
 @app.post("/product/create")
