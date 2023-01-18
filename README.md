@@ -10,3 +10,4 @@ docker-compose up -d --build
 
 -   Tests
 -   Separate service, controller and repo
+-   GitHub actions
