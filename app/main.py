@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from app.db import database
-from app.models import VendingMachine, Product, Stock
+from app.db import database, VendingMachine, Product, Stock
 
 import ormar
 import asyncpg
