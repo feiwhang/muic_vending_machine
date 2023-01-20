@@ -6,6 +6,11 @@
 docker-compose up -d --build
 ```
 
+## Swagger
+```
+http://localhost:8008/docs#/
+```
+
 ## To be implemented:
 
 -   Tests
