@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from app.db import database, VendingMachine, Product, Stock
+from .db import database, VendingMachine, Product, Stock
 
 import ormar
 import asyncpg
@@ -211,4 +211,4 @@ async def get_products():
     Gets all products in the database.
     """
     products = await Product.objects.all()
-    return [{"name": product.name, "price": product.price} for product in products]
+    return [{"id": product.id ,"name": product.name, "price": product.price} for product in products]

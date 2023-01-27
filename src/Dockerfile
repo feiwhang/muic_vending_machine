@@ -2,7 +2,7 @@
 FROM python:3.11.1-slim
 
 # set the working directory
-WORKDIR /app
+WORKDIR /src/app
 
 # set env variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -13,4 +13,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # copy project
-COPY . .
+COPY .. .
