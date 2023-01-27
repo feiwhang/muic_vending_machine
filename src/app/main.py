@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from .db import database, VendingMachine, Product, Stock
+from http import HTTPStatus
 
 import ormar
 import asyncpg
@@ -39,11 +40,11 @@ async def create_vending_machine(name: str, location: str):
         await new_machine.save()
     except asyncpg.exceptions.UniqueViolationError:
         raise HTTPException(
-            status_code=500, detail="Vending machine name already exists"
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine name already exists"
         )
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Vending machine created")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Vending machine created")
 
 
 @app.put("/vending_machine/edit")
@@ -62,16 +63,16 @@ async def edit_vending_machine(
             machine.location = new_location or machine.location
             await machine.update()
     except ormar.NoMatch:
-        return HTTPException(status_code=500, detail="Vending machine does not exist")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Vending machine updated")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Vending machine updated")
 
 
 @app.delete("/vending_machine/delete")
 async def delete_vending_machine(id: int):
     """
-    Deletes a vending machine by taking an id as input, then deteles it from the database.
+    Deletes a vending machine by taking an id as input, then deletes it from the database.
     An error message is returned if the vending machine id does not exist or if an exception occurs during delete.
     """
     try:
@@ -80,8 +81,8 @@ async def delete_vending_machine(id: int):
     except ormar.NoMatch:
         return {"error_message": "Vending machine does not exist"}
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Vending machine deleted")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Vending machine deleted")
 
 
 @app.post("/vending_machine/stocks/add")
@@ -98,9 +99,9 @@ async def add_product_to_stocks(
         # retrieve the vending machine
         machine = await VendingMachine.objects.get(id=vending_machine_id)
     except ormar.NoMatch:
-        return HTTPException(status_code=500, detail="Vending machine does not exist")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
     try:
         # retrieve the product
@@ -108,7 +109,7 @@ async def add_product_to_stocks(
         # check if product already exists in the vending machine's stocks
         if await machine.stocks.filter(id=product_id).exists():
             return HTTPException(
-                status_code=500,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Product already exist in stocks, please edit or delete",
             )
         # add the product to the vending machine's stocks with quantity
@@ -116,11 +117,11 @@ async def add_product_to_stocks(
 
     except ormar.NoMatch:
         return HTTPException(
-            status_code=500, detail="Product does not exist, please create"
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Product does not exist, please create"
         )
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Product added to stocks")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Product added to stocks")
 
 
 @app.get("/vending_machine/stocks")
@@ -137,9 +138,9 @@ async def get_stocks(vending_machine_id: int):
             for product in stocks
         ]
     except ormar.NoMatch:
-        return HTTPException(status_code=500, detail="Vending machine does not exist")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @app.put("/vending_machine/stocks/edit")
@@ -153,17 +154,17 @@ async def edit_stocks(vending_machine_id: int, product_id: int, new_quantity: in
         # check if product exists in the vending machine's stocks
         if not await machine.stocks.filter(id=product_id).exists():
             return HTTPException(
-                status_code=500,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Product does not exist in stocks, please add",
             )
         await machine.stocks.filter(id=product_id).update(
             stock={"quantity": new_quantity}
         )
     except ormar.NoMatch:
-        return HTTPException(status_code=500, detail="Vending machine does not exist")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Product quantity updated")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Product quantity updated")
 
 
 @app.delete("/vending_machine/stocks/delete")
@@ -177,15 +178,15 @@ async def delete_stocks(vending_machine_id: int, product_id: int):
         # check if product exists in the vending machine's stocks
         if not await machine.stocks.filter(id=product_id).exists():
             return HTTPException(
-                status_code=500,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Product does not exist in stocks",
             )
         await machine.stocks.filter(id=product_id).delete_through_instance(product_id)
     except ormar.NoMatch:
-        return HTTPException(status_code=500, detail="Vending machine does not exist")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Vending machine does not exist")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Product deleted from stocks")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Product deleted from stocks")
 
 
 @app.post("/product/create")
@@ -198,10 +199,10 @@ async def create_product(name: str, price: int):
         new_product = Product(name=name, price=price)
         await new_product.save()
     except asyncpg.exceptions.UniqueViolationError:
-        return HTTPException(status_code=500, detail="Product name already exists")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Product name already exists")
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
-    return HTTPException(status_code=200, detail="Product created")
+        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    return HTTPException(status_code=HTTPStatus.OK, detail="Product created")
 
 
 # get all products
