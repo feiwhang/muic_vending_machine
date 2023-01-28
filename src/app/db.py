@@ -1,20 +1,27 @@
-from .config import settings
-
+"""Database connection and models."""
 import databases
 import ormar
 import sqlalchemy
+
+from .config import settings
 
 database = databases.Database(settings.db_url)
 metadata = sqlalchemy.MetaData()
 
 
 class BaseMeta(ormar.ModelMeta):
+    """Base metadata for all models."""
+
     metadata = metadata
     database = database
 
 
 class Product(ormar.Model):
+    """Product model."""
+
     class Meta(BaseMeta):
+        """Meta class for Product model."""
+
         tablename = "products"
 
     id: int = ormar.Integer(primary_key=True)
@@ -23,7 +30,11 @@ class Product(ormar.Model):
 
 
 class Stock(ormar.Model):
+    """Stock model."""
+
     class Meta(BaseMeta):
+        """Meta class for Stock model."""
+
         tablename = "stocks"
 
     id: int = ormar.Integer(primary_key=True)
@@ -31,7 +42,11 @@ class Stock(ormar.Model):
 
 
 class VendingMachine(ormar.Model):
+    """Vending machine model."""
+
     class Meta(BaseMeta):
+        """Meta class for VendingMachine model."""
+
         tablename = "vending_machines"
 
     id: int = ormar.Integer(primary_key=True)
