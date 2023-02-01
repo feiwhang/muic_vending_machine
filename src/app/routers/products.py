@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/products", tags=["Products"])
 
 
 @router.post("/create")
-async def create_product(name: str, price: int) -> HTTPException:
+async def create_product(name: str, price: int) -> Product:
     """Create a new product.
 
     Args:
@@ -18,20 +18,20 @@ async def create_product(name: str, price: int) -> HTTPException:
         price (int): The price of the product.
 
     Returns:
-        HTTPException: An error message is returned if the product name already exists
-                    or if an exception occurs during save.
+        Product: The newly created product.
     """
     try:
         new_product = Product(name=name, price=price)
         await new_product.save()
+
+        return new_product
     except asyncpg.exceptions.UniqueViolationError:
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Product name already exists",
         )
     except Exception as e:
-        return HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
-    return HTTPException(status_code=HTTPStatus.OK, detail="Product created")
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/all")
