@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   web:
-    build: ./src
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
     command: bash -c 'while !</dev/tcp/db/5432; do sleep ; done; uvicorn app.main:app --host 0.0.0.0'
     volumes:
       - .:/app
@@ -22,7 +24,6 @@ services:
       - POSTGRES_USER=muic_vending_machine
       - POSTGRES_PASSWORD=muic_vending_machine
       - POSTGRES_DB=muic_vending_machine
-    
+
 volumes:
   postgres_data:
-    
